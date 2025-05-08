@@ -15,7 +15,7 @@ const addUser = async (username, password) => {
   const pool = await connectToDatabase();
   const result = await pool.request()
     .input('username', sql.NVarChar, username)
-    .input('password', sql.NVarChar, password) // You should hash passwords before storing them
+    .input('password', sql.NVarChar, password) 
     .query('INSERT INTO Users (username, password) VALUES (@username, @password) SELECT SCOPE_IDENTITY() AS id');
   return result.recordset[0].id;
 };

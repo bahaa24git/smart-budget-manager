@@ -1,14 +1,12 @@
-// config/db.js
-
 const sql = require('mssql');
 
 const config = {
   user: 'Ahmed',
   password: '22122004',
   server: 'AHMEDNG',
-  database: 'SmartBudgetDB', // Change this to your actual DB name
+  database: 'SmartBudgetDB', 
   options: {
-    encrypt: false, // Set to true if you're using Azure
+    encrypt: false, 
     trustServerCertificate: true // Allow self-signed certs
   }
 };

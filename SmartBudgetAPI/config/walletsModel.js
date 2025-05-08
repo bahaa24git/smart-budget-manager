@@ -4,7 +4,7 @@ const connectToDatabase = require('./db');
 // Function to fetch all wallets from the database
 const getAllWallets = async () => {
   const pool = await connectToDatabase();
-  const result = await pool.request().query('SELECT * FROM Wallets');  // Adjust table name if needed
+  const result = await pool.request().query('SELECT * FROM Wallets');  
   return result.recordset;
 };
 
@@ -14,7 +14,7 @@ const addWallet = async (name, balance) => {
   const result = await pool.request()
     .input('name', sql.NVarChar, name)
     .input('balance', sql.Float, balance)
-    .query('INSERT INTO Wallets (name, balance) VALUES (@name, @balance) SELECT SCOPE_IDENTITY() AS id');  // Adjust column names if needed
+    .query('INSERT INTO Wallets (name, balance) VALUES (@name, @balance) SELECT SCOPE_IDENTITY() AS id');  
   return result.recordset[0].id;
 };
 

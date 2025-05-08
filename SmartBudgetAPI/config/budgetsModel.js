@@ -4,7 +4,7 @@ const connectToDatabase = require('./db');
 // Function to fetch all budgets from the database
 const getAllBudgets = async () => {
   const pool = await connectToDatabase();
-  const result = await pool.request().query('SELECT * FROM Budgets');  // Adjust table name if needed
+  const result = await pool.request().query('SELECT * FROM Budgets'); 
   return result.recordset;
 };
 
@@ -15,7 +15,7 @@ const addBudget = async (name, amount, walletId) => {
     .input('name', sql.NVarChar, name)
     .input('amount', sql.Float, amount)
     .input('walletId', sql.Int, walletId)
-    .query('INSERT INTO Budgets (name, amount, walletId) VALUES (@name, @amount, @walletId) SELECT SCOPE_IDENTITY() AS id');  // Adjust column names if needed
+    .query('INSERT INTO Budgets (name, amount, walletId) VALUES (@name, @amount, @walletId) SELECT SCOPE_IDENTITY() AS id');  
   return result.recordset[0].id;
 };
 

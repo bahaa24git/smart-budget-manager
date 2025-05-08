@@ -18,7 +18,6 @@ const budgetRoutes = require('./routes/budgets');
 const transactionRoutes = require('./routes/transactions');
 
   
-// Add the /status route first, before other API routes
 app.get('/status', (req, res) => {
   res.json({ message: 'Server is up and running' });
 });
