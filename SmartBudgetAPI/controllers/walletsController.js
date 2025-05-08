@@ -28,4 +28,4 @@ exports.createWallet = async (req, res) => {
     }
 };
 
-// Optional: You can add methods for updating, deleting, and getting by ID if required.
+// Optional: add methods for updating, deleting, and getting by ID if required.
