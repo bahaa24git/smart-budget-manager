@@ -4,17 +4,18 @@ const config = {
   user: 'Ahmed',
   password: '22122004',
   server: 'AHMEDNG',
-  database: 'SmartBudgetDB', 
+  database: 'SmartBudgetDB',
   options: {
-    encrypt: false, 
-    trustServerCertificate: true // Allow self-signed certs
+    encrypt: false,
+    trustServerCertificate: true
   }
 };
 
 const connectToDatabase = async () => {
   try {
-    await sql.connect(config);
+    const pool = await sql.connect(config);
     console.log('Connected to SQL Server successfully.');
+    return pool;
   } catch (err) {
     console.error('Database connection failed:', err);
     throw err;
@@ -23,5 +24,5 @@ const connectToDatabase = async () => {
 
 module.exports = {
   sql,
-  connectToDatabase
+  connectToDatabase // Make sure this is exported
 };
