@@ -1,5 +1,6 @@
 const { sql } = require('../config/db'); // Import the database connection
 const bcrypt = require('bcryptjs'); // Import bcryptjs for password hashing
+const jwt = require('jsonwebtoken'); // Import jsonwebtoken
 
 // Register new user
 exports.register = async (req, res) => {
@@ -60,7 +61,19 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: 'Invalid username or password' });
         }
 
-        res.status(200).json({ message: 'User logged in successfully' });
+        // Create JWT token
+        const token = jwt.sign(
+            { userId: user.UserID, username: user.Username }, // Payload
+            process.env.JWT_SECRET, // Secret key from .env
+            { expiresIn: '1h' } // Token expiration time
+        );
+
+        // Send the token in the response
+        res.status(200).json({
+            message: 'User logged in successfully',
+            token: token
+        });
+
     } catch (error) {
         console.error('Error logging in user:', error);
         res.status(500).json({ message: 'Internal server error' });

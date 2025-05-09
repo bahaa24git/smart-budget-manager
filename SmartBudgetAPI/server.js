@@ -41,3 +41,6 @@ connectToDatabase()
   .catch((err) => {
     console.error('Failed to connect to DB:', err);
   });
+
+// Export the app for testing purposes
+module.exports = app;

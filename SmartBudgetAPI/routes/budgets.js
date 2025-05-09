@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const budgetsController = require('../controllers/budgetsController');
+const authMiddleware = require('../middleware/authMiddleware'); // Import authMiddleware
 
-// GET all budgets
-router.get('/', async (req, res) => {
+// GET all budgets (public or protected depending on your needs)
+router.get('/', authMiddleware, async (req, res) => { // Protected
   try {
     await budgetsController.getAllBudgets(req, res);
   } catch (err) {
@@ -12,8 +13,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET a single budget by id
-router.get('/:id', async (req, res) => {
+// GET a single budget by id (protected)
+router.get('/:id', authMiddleware, async (req, res) => {
   try {
     await budgetsController.getBudgetById(req, res);
   } catch (err) {
@@ -22,8 +23,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST: create a new budget
-router.post('/', async (req, res) => {
+// POST: create a new budget (protected)
+router.post('/', authMiddleware, async (req, res) => { // Protected
   try {
     await budgetsController.createBudget(req, res);
   } catch (err) {
@@ -32,8 +33,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT: update an existing budget
-router.put('/:id', async (req, res) => {
+// PUT: update an existing budget (protected)
+router.put('/:id', authMiddleware, async (req, res) => { // Protected
   try {
     await budgetsController.updateBudget(req, res);
   } catch (err) {
@@ -42,8 +43,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE a budget by id
-router.delete('/:id', async (req, res) => {
+// DELETE a budget by id (protected)
+router.delete('/:id', authMiddleware, async (req, res) => { // Protected
   try {
     await budgetsController.deleteBudget(req, res);
   } catch (err) {
