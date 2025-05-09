@@ -28,7 +28,7 @@ const addTransaction = async (userId, amount, category, description, date, walle
         VALUES (@userId, @amount, @category, @description, @date, @walletId, @budgetId);
         SELECT SCOPE_IDENTITY() AS id
       `);
-
+      
     const transactionId = result.recordset[0].id;
 
     if (budgetId) {

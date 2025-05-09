@@ -7,29 +7,57 @@ const getAllBudgets = async () => {
   const result = await pool.request().query('SELECT * FROM Budgets');
   return result.recordset;
 };
-
-// Add a new budget
+// Add a new budget and update wallet balance
 const addBudget = async (userId, walletId, totalAmount, month, year) => {
   const pool = await connectToDatabase();
   const remainingAmount = totalAmount; // Set RemainingAmount to totalAmount
   const now = new Date();
 
-  const result = await pool.request()
-    .input('userId', sql.Int, userId)
-    .input('walletId', sql.Int, walletId)
-    .input('totalAmount', sql.Float, totalAmount)
-    .input('remainingAmount', sql.Float, remainingAmount) // Use remainingAmount
-    .input('month', sql.Int, month)
-    .input('year', sql.Int, year)
-    .input('createdAt', sql.DateTime, now)
-    .input('updatedAt', sql.DateTime, now)
-    .query(`
-      INSERT INTO Budgets (UserID, WalletID, TotalAmount, RemainingAmount, Month, Year, CreatedAt, UpdatedAt)
-      VALUES (@userId, @walletId, @totalAmount, @remainingAmount, @month, @year, @createdAt, @updatedAt);
-      SELECT SCOPE_IDENTITY() AS id
-    `);
+  try {
+    // Start a transaction to ensure atomicity
+    const transaction = pool.transaction();
+    await transaction.begin();
 
-  return result.recordset[0].id;
+    // Insert the budget into the Budgets table
+    const result = await transaction.request()
+      .input('userId', sql.Int, userId)
+      .input('walletId', sql.Int, walletId)
+      .input('totalAmount', sql.Float, totalAmount)
+      .input('remainingAmount', sql.Float, remainingAmount) // Use remainingAmount
+      .input('month', sql.Int, month)
+      .input('year', sql.Int, year)
+      .input('createdAt', sql.DateTime, now)
+      .input('updatedAt', sql.DateTime, now)
+      .query(`
+        INSERT INTO Budgets (UserID, WalletID, TotalAmount, RemainingAmount, Month, Year, CreatedAt, UpdatedAt)
+        VALUES (@userId, @walletId, @totalAmount, @remainingAmount, @month, @year, @createdAt, @updatedAt);
+        SELECT SCOPE_IDENTITY() AS id
+      `);
+
+    const budgetId = result.recordset[0].id;
+
+    // Update the wallet's balance and remaining balance
+    await transaction.request()
+      .input('walletId', sql.Int, walletId)
+      .input('totalAmount', sql.Float, totalAmount)
+      .query(`
+        UPDATE UserWallets
+        SET 
+          Balance = ISNULL(Balance, 0) + @totalAmount,
+          RemainingBalance = RemainingBalance + @totalAmount
+        WHERE WalletID = @walletId
+      `);
+
+    // Commit the transaction
+    await transaction.commit();
+
+    return budgetId; // Return the new budget ID after the transaction
+
+  } catch (error) {
+    // If an error occurs, rollback the transaction
+    console.error('Error adding budget and updating wallet balance:', error);
+    throw error;
+  }
 };
 
 // Function to update budget balance after a transaction

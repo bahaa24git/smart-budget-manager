@@ -34,7 +34,6 @@ exports.getBudgetById = async (req, res) => {
   }
 };
 
-// POST: Create new budget
 exports.createBudget = async (req, res) => {
   console.log(req.body);  // Add this to see the body being sent
 
@@ -54,19 +53,10 @@ exports.createBudget = async (req, res) => {
     // Add the budget
     const budgetId = await addBudget(userId, walletId, totalAmount, month, year);
 
-    // Update the wallet's balance by adding the totalAmount
-    await transaction.request()
-      .input('walletId', sql.Int, walletId)
-      .input('totalAmount', sql.Float, totalAmount)
-      .query(`
-        UPDATE UserWallets
-        SET Balance = Balance + @totalAmount
-        WHERE WalletID = @walletId
-      `);
-
     // Commit the transaction
     await transaction.commit();
 
+    
     res.status(201).json({
       id: budgetId,
       userId,
