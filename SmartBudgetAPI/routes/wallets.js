@@ -8,7 +8,7 @@ router.get('/', walletsController.getAllWallets);
 
 // POST: Create a new wallet (protected route)
 router.post('/', authMiddleware, async (req, res) => {
-    const userIdFromToken = req.user.UserID; // Get user ID from JWT token
+    const userIdFromToken = req.user.userId;// Get user ID from JWT token
 
     // Ensure the wallet is being created by the correct user
     if (req.body.userId !== userIdFromToken) {

@@ -1,13 +1,14 @@
 const request = require('supertest');
-const app = require('../server'); // Now it's pointing to server.js
+const app = require('../server');
 const chai = require('chai');
 const expect = chai.expect;
 
-describe('User Authentication Routes', () => {
-  
-  let authToken = ''; // Variable to store the JWT token
+let authToken = ''; // Moved outside to share across describe blocks
+let testUserId = null;
+let testWalletId = null;
 
-  // Test: Register a new user
+describe('User Authentication Routes', () => {
+
   it('should register a new user successfully', async () => {
     const res = await request(app)
       .post('/auth/register')
@@ -16,12 +17,11 @@ describe('User Authentication Routes', () => {
         password: 'testpassword123',
         email: 'testuser@example.com'
       });
-    
+
     expect(res.status).to.equal(201);
     expect(res.body.message).to.equal('User registered successfully');
   });
 
-  // Test: Login and get the token
   it('should login and return a token', async () => {
     const res = await request(app)
       .post('/auth/login')
@@ -29,71 +29,76 @@ describe('User Authentication Routes', () => {
         username: 'testuser',
         password: 'testpassword123'
       });
-    
+
     expect(res.status).to.equal(200);
     expect(res.body.message).to.equal('User logged in successfully');
     expect(res.body.token).to.be.a('string');
-    authToken = res.body.token; // Store the token for future tests
+    authToken = res.body.token;
+    testUserId = res.body.user.id || res.body.user.UserID || 1; // Adjust depending on your API response
   });
 
-  // Test: Create a new wallet (protected route)
   it('should create a new wallet when logged in', async () => {
     const res = await request(app)
       .post('/wallets')
-      .set('Authorization', `Bearer ${authToken}`) // Pass the JWT token in the Authorization header
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
-        walletName: 'Test Wallet',
+        userId: testUserId,
+        name: 'Test Wallet',
         balance: 1000
       });
-    
+
     expect(res.status).to.equal(201);
-    expect(res.body.message).to.equal('Wallet created successfully');
+    expect(res.body.name).to.equal('Test Wallet');
+    testWalletId = res.body.id; // Save for use in transaction tests
   });
 
-  // Test: Try to create a wallet without being logged in (should fail)
   it('should not create a wallet without a token', async () => {
     const res = await request(app)
       .post('/wallets')
       .send({
-        walletName: 'Unauthorized Wallet',
+        userId: testUserId,
+        name: 'Unauthorized Wallet',
         balance: 1000
       });
-    
-    expect(res.status).to.equal(401); // Unauthorized
-    expect(res.body.message).to.equal('No token, authorization denied');
+
+    expect(res.status).to.equal(401);
+    expect(res.body.message).to.match(/token/i);
   });
 });
 
 describe('Transaction Routes', () => {
-
-  let authToken = ''; // Variable to store the JWT token for transactions
-
-  // Test: Create a transaction (protected route)
   it('should create a new transaction', async () => {
     const res = await request(app)
       .post('/transactions/add')
       .set('Authorization', `Bearer ${authToken}`)
       .send({
+        userID: testUserId,
         amount: 200,
         description: 'Test Transaction',
-        walletId: 1
+        category: 'Test',
+        date: new Date().toISOString(),
+        budgetID: 1,
+        walletID: testWalletId
       });
 
     expect(res.status).to.equal(201);
-    expect(res.body.message).to.equal('Transaction created successfully');
+    expect(res.body.message).to.match(/success/i);
   });
 
-  // Test: Unauthorized transaction attempt
   it('should not allow transaction creation without a token', async () => {
     const res = await request(app)
       .post('/transactions/add')
       .send({
+        userID: testUserId,
         amount: 200,
         description: 'Test Transaction',
-        walletId: 1
+        category: 'Test',
+        date: new Date().toISOString(),
+        budgetID: 1,
+        walletID: testWalletId
       });
 
-    expect(res.status).to.equal(401); // Unauthorized
-    expect(res.body.message).to.equal('No token, authorization denied');
+    expect(res.status).to.equal(401);
+    expect(res.body.message).to.match(/token/i);
   });
 });

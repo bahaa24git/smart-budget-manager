@@ -5,7 +5,7 @@ require('dotenv').config();
 const generateJWT = (userId) => {
   const payload = { userId };
   const secretKey = process.env.JWT_SECRET;
-  const options = { expiresIn: '1h' }; // You can adjust the expiration time here
+  const options = { expiresIn: '10m' }; // You can adjust the expiration time here
 
   const token = jwt.sign(payload, secretKey, options);
   return token;

@@ -7,6 +7,7 @@ const getAllBudgets = async () => {
   const result = await pool.request().query('SELECT * FROM Budgets');
   return result.recordset;
 };
+
 // Add a new budget and update wallet balance
 const addBudget = async (userId, walletId, totalAmount, month, year) => {
   const pool = await connectToDatabase();
@@ -44,7 +45,7 @@ const addBudget = async (userId, walletId, totalAmount, month, year) => {
         UPDATE UserWallets
         SET 
           Balance = ISNULL(Balance, 0) + @totalAmount,
-          RemainingBalance = RemainingBalance + @totalAmount
+          RemainingBalance = ISNULL(RemainingBalance, 0) + @totalAmount
         WHERE WalletID = @walletId
       `);
 
@@ -56,6 +57,7 @@ const addBudget = async (userId, walletId, totalAmount, month, year) => {
   } catch (error) {
     // If an error occurs, rollback the transaction
     console.error('Error adding budget and updating wallet balance:', error);
+    await transaction.rollback();
     throw error;
   }
 };

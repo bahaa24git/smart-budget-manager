@@ -21,15 +21,20 @@ exports.getAllWallets = async (req, res) => {
 
 // Create a new wallet for a specific user
 exports.createWallet = async (req, res) => {
-    const { userId, name, balance } = req.body;
+    const { userId, name } = req.body;
+
+    // Ensure only the logged-in user can create a wallet for themselves
+    if (parseInt(userId) !== req.user.UserID) {
+        return res.status(403).json({ message: 'You are not authorized to create a wallet for another user.' });
+    }
 
     if (!userId || !name ) {
-        return res.status(400).json({ message: 'Please provide userId, name'});
+        return res.status(400).json({ message: 'Please provide userId and name' });
     }
 
     try {
-        const walletId = await addWallet(userId, name); // Passing userId to associate with the wallet
-        res.status(201).json({ id: walletId, userId, name});
+        const walletId = await addWallet(userId, name);
+        res.status(201).json({ id: walletId, userId, name });
     } catch (err) {
         console.error("Error creating wallet:", err);
         res.status(500).json({ message: 'Error creating wallet' });
@@ -68,25 +73,3 @@ exports.updateWalletBalance = async (walletId) => {
         throw new Error("Error updating wallet balance");
     }
 };
-
-// // Assuming a route that will create a transaction, we can update the wallet balance
-// exports.createTransaction = async (req, res) => {
-//     const { walletId, amount, description } = req.body;
-
-//     if (!walletId || amount === undefined || !description) {
-//         return res.status(400).json({ message: 'Please provide walletId, amount, and description' });
-//     }
-
-//     try {
-//         // Assuming createTransaction adds a new record to the Transactions table
-//         const transactionId = await createTransaction(walletId, amount, description);
-
-//         // Now update the wallet balance after transaction creation
-//         await this.updateWalletBalance(walletId);
-
-//         res.status(201).json({ id: transactionId, walletId, amount, description });
-//     } catch (err) {
-//         console.error("Error creating transaction:", err);
-//         res.status(500).json({ message: 'Error creating transaction' });
-//     }
-// };

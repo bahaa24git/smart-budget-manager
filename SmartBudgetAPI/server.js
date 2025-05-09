@@ -1,13 +1,13 @@
 const express = require('express');
 require('dotenv').config();
 const { connectToDatabase } = require('./config/db');
-
 const app = express();
 const PORT = process.env.PORT || 5000;
+const cookieParser = require('cookie-parser');
 
 // Middleware
 app.use(express.json());  // This will parse incoming JSON requests
-
+app.use(cookieParser()); // Middleware to parse cookies
 // Routes
 const authRoutes = require('./routes/auth');
 const walletRoutes = require('./routes/wallets');

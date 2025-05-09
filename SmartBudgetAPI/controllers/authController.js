@@ -1,81 +1,104 @@
-const { sql } = require('../config/db'); // Import the database connection
-const bcrypt = require('bcryptjs'); // Import bcryptjs for password hashing
-const jwt = require('jsonwebtoken'); // Import jsonwebtoken
+const { sql } = require('../config/db'); // DB connection
+const bcrypt = require('bcryptjs');      // Password hashing
+const jwt = require('jsonwebtoken');     // JWT creation
+const { generateJWT } = require('../config/jwtUtils'); // Custom token util
 
-// Register new user
+// Register a new user
 exports.register = async (req, res) => {
-    const { username, email, password } = req.body; // Now email is included
+  const { username, email, password } = req.body;
 
-    console.log("Register request body:", req.body); // Debug log
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: 'Please provide username, email, and password' });
+  }
 
-    if (!username || !email || !password) {
-        return res.status(400).json({ message: 'Please provide username, email, and password' });
+  try {
+    const pool = await sql.connect();
+
+    // Check if email or username already exists
+    const checkUser = await pool.request()
+      .input('email', sql.NVarChar, email)
+      .input('username', sql.NVarChar, username)
+      .query('SELECT * FROM Users WHERE Email = @email OR Username = @username');
+
+    if (checkUser.recordset.length > 0) {
+      return res.status(409).json({ message: 'User with this email or username already exists' });
     }
 
-    try {
-        const pool = await sql.connect();
-        console.log("Connected to DB, inserting user..."); // Debug log
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Hash the password using bcryptjs
-        const hashedPassword = await bcrypt.hash(password, 10); // Salt rounds set to 10
+    await pool.request()
+      .input('username', sql.NVarChar, username)
+      .input('email', sql.NVarChar, email)
+      .input('passwordHash', sql.NVarChar, hashedPassword)
+      .query(`
+        INSERT INTO Users (Username, Email, PasswordHash, CreatedAt, UpdatedAt)
+        VALUES (@username, @email, @passwordHash, GETDATE(), GETDATE())
+      `);
 
-        await pool.request()
-            .input('username', sql.NVarChar, username)
-            .input('email', sql.NVarChar, email) // Fixed email variable
-            .input('passwordHash', sql.NVarChar, hashedPassword) // Use hashed password
-            .query('INSERT INTO Users (Username, Email, PasswordHash, CreatedAt, UpdatedAt) VALUES (@username, @email, @passwordHash, GETDATE(), GETDATE())');
+    res.status(201).json({ message: 'User registered successfully' });
 
-        console.log("User inserted successfully"); // Debug log
-        res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-        console.error('Error registering user:', error); // Shows error stack
-        res.status(500).json({ message: 'Internal server error' });
-    }
+  } catch (error) {
+    console.error('Error registering user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
 // Login user
 exports.login = async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ message: 'Please provide both username and password' });
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Please provide both username and password' });
+  }
+
+  try {
+    const pool = await sql.connect();
+
+    const result = await pool.request()
+      .input('username', sql.NVarChar, username)
+      .query('SELECT * FROM Users WHERE Username = @username');
+
+    if (result.recordset.length === 0) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    try {
-        const pool = await sql.connect();
+    const user = result.recordset[0];
 
-        // Get user from the database
-        const result = await pool.request()
-            .input('username', sql.NVarChar, username)
-            .query('SELECT * FROM Users WHERE Username = @username');
-
-        if (result.recordset.length === 0) {
-            return res.status(401).json({ message: 'Invalid username or password' });
-        }
-
-        const user = result.recordset[0]; // Get the first user (there should only be one)
-        
-        // Compare the plain password with the hashed password in the database
-        const isMatch = await bcrypt.compare(password, user.PasswordHash);
-
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid username or password' });
-        }
-
-        // Create JWT token
-        const token = jwt.sign(
-            { userId: user.UserID, username: user.Username }, // Payload
-            process.env.JWT_SECRET, // Secret key from .env
-            { expiresIn: '1h' } // Token expiration time
-        );
-
-        // Send the token in the response
-        res.status(200).json({
-            message: 'User logged in successfully',
-            token: token
-        });
-
-    } catch (error) {
-        console.error('Error logging in user:', error);
-        res.status(500).json({ message: 'Internal server error' });
+    const isMatch = await bcrypt.compare(password, user.PasswordHash);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    const token = generateJWT(user.UserID); // Create JWT
+
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 1000, // 1 hour
+      sameSite: 'Strict',
+    });
+
+    res.status(200).json({ message: 'Login successful', token });
+
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Error logging in' });
+  }
+};
+
+// Logout user
+exports.logout = (req, res) => {
+  try {
+    res.clearCookie('jwt', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'Strict',
+    });
+
+    res.status(200).json({ message: 'Logged out successfully' });
+
+  } catch (err) {
+    console.error('Logout error:', err);
+    res.status(500).json({ message: 'Error logging out' });
+  }
 };
