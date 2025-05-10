@@ -1,6 +1,6 @@
-const { sql } = require('../config/db'); // Import the database connection
+const { sql } = require('../models/db'); // Import the database connection
 const bcrypt = require('bcryptjs'); // Import bcryptjs for password hashing
-const { connectToDatabase } = require('../config/db');
+const { connectToDatabase } = require('../models/db');
 
 const updateUser = async (req, res) => {
   const userIdFromToken = req.user.UserID; // Get the UserID from the JWT token

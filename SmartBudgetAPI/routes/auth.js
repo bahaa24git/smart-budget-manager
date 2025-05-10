@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController'); // Import controller
 const authMiddleware = require('../middleware/authMiddleware'); // Import middleware
-const { sql } = require('../config/db'); // Import the database connection
+const { sql } = require('../models/db'); // Import the database connection
 
 // POST: Register a new user
 router.post('/register', authController.register);

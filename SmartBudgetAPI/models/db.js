@@ -1,6 +1,6 @@
 const sql = require('mssql');
 
-const config = {
+const models = {
   user: 'Ahmed',
   password: '22122004',
   server: 'AHMEDNG',
@@ -13,7 +13,7 @@ const config = {
 
 const connectToDatabase = async () => {
   try {
-    const pool = await sql.connect(config);
+    const pool = await sql.connect(models);
     console.log('Connected to SQL Server successfully.');
     return pool;
   } catch (err) {

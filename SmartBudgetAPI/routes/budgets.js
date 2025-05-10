@@ -1,56 +1,34 @@
 const express = require('express');
 const router = express.Router();
-const budgetsController = require('../controllers/budgetsController');
-const authMiddleware = require('../middleware/authMiddleware'); // Import authMiddleware
+const budgetsController = require('../controllers/budgetsController'); // Import controller
+const authMiddleware = require('../middleware/authMiddleware'); // Import the auth middleware
 
-// GET all budgets (public or protected depending on your needs)
-router.get('/', authMiddleware, async (req, res) => { // Protected
-  try {
-    await budgetsController.getAllBudgets(req, res);
-  } catch (err) {
-    console.error("Error in GET /budgets:", err);
-    res.status(500).json({ message: 'Error retrieving budgets' });
-  }
-});
+const {
+  getAllBudgets,
+  getBudgetById,
+  createBudget,
+  updateBudget,
+  deleteBudget
+} = require('../controllers/budgetsController');
 
-// GET a single budget by id (protected)
-router.get('/:id', authMiddleware, async (req, res) => {
-  try {
-    await budgetsController.getBudgetById(req, res);
-  } catch (err) {
-    console.error(`Error in GET /budgets/${req.params.id}:`, err);
-    res.status(500).json({ message: 'Error retrieving budget' });
-  }
-});
+//  GET /api/budgets
+//  Get all budgets for authenticated user
+router.get('/', authMiddleware, getAllBudgets);
 
-// POST: create a new budget (protected)
-router.post('/', authMiddleware, async (req, res) => { // Protected
-  try {
-    await budgetsController.createBudget(req, res);
-  } catch (err) {
-    console.error("Error in POST /budgets:", err);
-    res.status(500).json({ message: 'Error creating budget' });
-  }
-});
+//  GET /api/budgets/:id
+//  Get budget by ID
+router.get('/:id', authMiddleware, getBudgetById);
 
-// PUT: update an existing budget (protected)
-router.put('/:id', authMiddleware, async (req, res) => { // Protected
-  try {
-    await budgetsController.updateBudget(req, res);
-  } catch (err) {
-    console.error(`Error in PUT /budgets/${req.params.id}:`, err);
-    res.status(500).json({ message: 'Error updating budget' });
-  }
-});
+//  POST /api/budgets
+//  Create new budget
+router.post('/', authMiddleware, createBudget);
 
-// DELETE a budget by id (protected)
-router.delete('/:id', authMiddleware, async (req, res) => { // Protected
-  try {
-    await budgetsController.deleteBudget(req, res);
-  } catch (err) {
-    console.error(`Error in DELETE /budgets/${req.params.id}:`, err);
-    res.status(500).json({ message: 'Error deleting budget' });
-  }
-});
+//  PUT /api/budgets/:id
+//  Update existing budget
+router.put('/:id', authMiddleware, updateBudget);
+
+//  DELETE /api/budgets/:id
+//  Delete budget by ID
+router.delete('/:id', authMiddleware, deleteBudget);
 
 module.exports = router;

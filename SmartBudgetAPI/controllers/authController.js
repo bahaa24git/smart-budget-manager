@@ -1,7 +1,7 @@
-const { sql } = require('../config/db'); // DB connection
+const { sql } = require('../models/db'); // DB connection
 const bcrypt = require('bcryptjs');      // Password hashing
 const jwt = require('jsonwebtoken');     // JWT creation
-const { generateJWT } = require('../config/jwtUtils'); // Custom token util
+const { generateJWT } = require('../utils/jwtUtils'); // Custom token util
 
 // Register a new user
 exports.register = async (req, res) => {
@@ -71,6 +71,8 @@ exports.login = async (req, res) => {
 
     const token = generateJWT(user.UserID); // Create JWT
 
+
+    
     res.cookie('jwt', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -83,22 +85,19 @@ exports.login = async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Error logging in' });
+    console.log("req.user:", req.user);
   }
 };
 
 // Logout user
+// controllers/authController.js
+
 exports.logout = (req, res) => {
-  try {
-    res.clearCookie('jwt', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'Strict',
-    });
-
-    res.status(200).json({ message: 'Logged out successfully' });
-
-  } catch (err) {
-    console.error('Logout error:', err);
-    res.status(500).json({ message: 'Error logging out' });
-  }
+  res.clearCookie('jwt', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
+    maxAge: 0
+  });
+  res.status(200).json({ message: 'Logged out successfully' });
 };

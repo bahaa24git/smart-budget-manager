@@ -1,8 +1,8 @@
-const { sql } = require('../config/db');
-const { getAllWallets, addWallet, updateWalletBalance } = require('../config/walletsModel');
-const { createTransaction } = require('../config/transactionsModel'); // Assuming this exists in your model
+const { sql } = require('../models/db');
+const { getAllWallets, addWallet, updateWalletBalance } = require('../models/walletsModel');
+const { createTransaction } = require('../models/transactionsModel'); // Assuming this exists in your model
 
-// Get all wallets for a specific user
+// Get all wallets for a specific usern
 exports.getAllWallets = async (req, res) => {
     const userId = req.params.userId;  // Assuming the userId is passed as a parameter in the URL
 
@@ -23,6 +23,11 @@ exports.getAllWallets = async (req, res) => {
 exports.createWallet = async (req, res) => {
     const { userId, name } = req.body;
 
+
+// console.log("req.user:", req.user);
+// console.log("userId from body:", userId);
+
+
     // Ensure only the logged-in user can create a wallet for themselves
     if (parseInt(userId) !== req.user.UserID) {
         return res.status(403).json({ message: 'You are not authorized to create a wallet for another user.' });
@@ -35,10 +40,11 @@ exports.createWallet = async (req, res) => {
     try {
         const walletId = await addWallet(userId, name);
         res.status(201).json({ id: walletId, userId, name });
-    } catch (err) {
-        console.error("Error creating wallet:", err);
-        res.status(500).json({ message: 'Error creating wallet' });
-    }
+    }catch (err) {
+    console.error("Error creating wallet:", err.message || err);
+    res.status(500).json({ message: 'Error creating wallet', error: err.message || err });
+    console.log("Wallet insert result:", result);
+}
 };
 
 // Function to update wallet balance
