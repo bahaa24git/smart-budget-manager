@@ -2,7 +2,7 @@ const { sql } = require('../models/db');
 const { getAllWallets, addWallet, updateWalletBalance } = require('../models/walletsModel');
 const { createTransaction } = require('../models/transactionsModel'); // Assuming this exists in your model
 
-// Get all wallets for a specific usern
+// Get all wallets for a specific user
 exports.getAllWallets = async (req, res) => {
     const userId = req.params.userId;  // Assuming the userId is passed as a parameter in the URL
 
@@ -21,8 +21,12 @@ exports.getAllWallets = async (req, res) => {
 
 // Create a new wallet for a specific user
 exports.createWallet = async (req, res) => {
-    const { userId, name } = req.body;
+    const { name } = req.body;
+  const userId = req.user.UserID;
 
+  if (!userId) {
+    return res.status(401).json({ message: 'You must be logged in to create an Account.' });
+  }
 
 // console.log("req.user:", req.user);
 // console.log("userId from body:", userId);

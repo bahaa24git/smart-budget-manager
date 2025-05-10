@@ -7,6 +7,8 @@ const { sql } = require('../models/db'); // Import the database connection
 // POST: Register a new user
 router.post('/register', authController.register);
 
+
+
 // POST: Login a user
 router.post('/login', authController.login);
 

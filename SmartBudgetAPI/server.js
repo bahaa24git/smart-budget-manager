@@ -5,8 +5,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const cookieParser = require('cookie-parser');
 const authMiddleware = require('./middleware/authMiddleware');
+const cors = require('cors');
 
 // Middleware
+app.use(cors({
+  origin: "http://localhost:3000", // frontend URL
+  credentials: true
+}));
 app.use(express.json());  // This will parse incoming JSON requests
 app.use(cookieParser()); // Middleware to parse cookies
 // Routes
